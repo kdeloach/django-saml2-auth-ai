@@ -151,7 +151,11 @@ def denied(r):
 
 
 def map_user_props(user_identity):
-    return default_map_user_props(attributes_map, user_identity)
+    attributes_map = settings.SAML2_AUTH.get("ATTRIBUTES_MAP", {})
+    if hasattr(attributes_map, "__call__"):
+        return attributes_map(user_identity)
+    else:
+        return default_map_user_props(attributes_map, user_identity)
 
 
 def default_map_user_props(attributes_map, user_identity):

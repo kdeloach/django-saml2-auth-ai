@@ -154,7 +154,9 @@ Explanation
 
 **NEW_USER_PROFILE** Default settings for newly created users
 
-**ATTRIBUTES_MAP** Mapping of Django user attributes to SAML2 user attributes
+**ATTRIBUTES_MAP** Mapping of Django user attributes to SAML2 user attributes.
+This can also be a function to map SAML2 user identity attributes to Django
+user model attributes.
 
 **TRIGGER** Hooks to trigger additional actions during user login and creation
 flows. These TRIGGER hooks are strings containing a `dotted module name <https://docs.python.org/3/tutorial/modules.html#packages>`_
