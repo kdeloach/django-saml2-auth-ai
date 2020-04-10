@@ -150,15 +150,26 @@ def denied(r):
     return render(r, "django_saml2_auth/denied.html")
 
 
-def _create_new_user(user_identity):
-    attributes_map = settings.SAML2_AUTH.get("ATTRIBUTES_MAP", {})
-    user_name = user_identity[attributes_map.get("username", "UserName")][0]
-    user = user_model.objects.create_user(user_name)
+def map_user_props(user_identity):
+    return default_map_user_props(attributes_map, user_identity)
+
+
+def default_map_user_props(attributes_map, user_identity):
+    """
+    Return dict of mapped user properties from SAML response
+    using ATTRIBUTES_MAP.
+    """
+    user_props = {}
     for (user_attr, saml_attr) in attributes_map.items():
-        if user_attr != "username":
-            values = user_identity.get(saml_attr)
-            if values is not None:
-                setattr(user, user_attr, values[0])
+        values = user_identity.get(saml_attr)
+        if values is not None:
+            user_props[user_attr] = values[0]
+    return user_props
+
+
+def _create_new_user(user_identity):
+    user_props = map_user_props(user_identity)
+    user = user_model.objects.create_user(**user_props)
 
     groups = [
         Group.objects.get(name=x)
@@ -216,9 +227,8 @@ def acs(r):
             get_reverse([denied, "denied", "django_saml2_auth:denied"])
         )
 
-    user_name = user_identity[
-        settings.SAML2_AUTH.get("ATTRIBUTES_MAP", {}).get("username", "UserName")
-    ][0]
+    user_props = map_user_props(user_identity)
+    user_name = user_props["username"]
 
     target_user = None
     is_new_user = False
